@@ -372,7 +372,7 @@ RCT_NOT_IMPLEMENTED(-initWithCoder:(NSCoder *)aDecoder)
     // check if it is standard cell or user-defined UI
     if ([self hasCustomCells:indexPath.section]){
         cell = ((RNCellView *)_cells[indexPath.section][indexPath.row]).tableViewCell;
-    } else if (self.reactModuleForCell != nil && ![self.reactModuleForCell isEqualToString:@""]) {
+    } else if ([self hasReactModuleCells]) {
         cell = [self setupReactModuleCell:tableView data:item indexPath:indexPath];
     } else {
         cell = [tableView dequeueReusableCellWithIdentifier:@"Cell"];
@@ -418,15 +418,26 @@ RCT_NOT_IMPLEMENTED(-initWithCoder:(NSCoder *)aDecoder)
 -(NSMutableDictionary *)dataForRow:(NSInteger)row section:(NSInteger)section {
     return (NSMutableDictionary *)_sections[section][@"items"][row];
 }
+//
+//-(CGFloat)tableView:(UITableView *)tableView estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath {
+//    return UITableViewAutomaticDimension;
+//}
 
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (![self hasCustomCells:indexPath.section]){
+    if ([self hasCustomCells:indexPath.section]){
+        RNCellView *cell = (RNCellView *)_cells[indexPath.section][indexPath.row];
+        CGFloat height = cell.componentHeight;
+        return height;
+    } else if ([self hasReactModuleCells]) {
+        RNReactModuleCell *cell = (RNReactModuleCell *)[self tableView:tableView cellForRowAtIndexPath:indexPath];
+//        if (cell == nil) {
+//            return _cellHeight;
+//        } else {
+            return [cell getHeightFromRootView];
+//        }
+    } else {
         NSNumber *styleHeight = _sections[indexPath.section][@"items"][indexPath.row][@"height"];
         return styleHeight.floatValue ?: _cellHeight;
-    } else {
-        RNCellView *cell = (RNCellView *)_cells[indexPath.section][indexPath.row];
-        CGFloat height =  cell.componentHeight;
-        return height;
     }
 
 }
@@ -523,5 +534,9 @@ RCT_NOT_IMPLEMENTED(-initWithCoder:(NSCoder *)aDecoder)
 
 -(BOOL)hasCustomCells:(NSInteger)section {
     return [[_sections[section] valueForKey:@"customCells"] boolValue];
+}
+
+-(BOOL)hasReactModuleCells {
+    return self.reactModuleForCell != nil && ![self.reactModuleForCell isEqualToString:@""];
 }
 @end

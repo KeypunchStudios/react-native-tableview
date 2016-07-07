@@ -16,6 +16,7 @@
 #import "RNTableFooterView.h"
 #import "RNTableHeaderView.h"
 #import "RNReactModuleCell.h"
+#import "RNAppGlobals.h"
 
 @interface RNTableView()<UITableViewDataSource, UITableViewDelegate> {
     id<RNTableViewDatasource> datasource;
@@ -69,19 +70,13 @@
     }
 }
 
-- (instancetype)initWithBridge:(RCTBridge *)bridge {
-    RCTAssertParam(bridge);
-    RCTAssertParam(bridge.eventDispatcher);
+- (instancetype)initWithEventDispatcher:(RCTEventDispatcher *)eventDispatcher
+{
+    RCTAssertParam(eventDispatcher);
 
     if ((self = [super initWithFrame:CGRectZero])) {
-        _eventDispatcher = bridge.eventDispatcher;
-        
-        _bridge = bridge;
-        while ([_bridge respondsToSelector:NSSelectorFromString(@"parentBridge")]
-               && [_bridge valueForKey:@"parentBridge"]) {
-            _bridge = [_bridge valueForKey:@"parentBridge"];
-        }
-
+        _bridge = [[RNAppGlobals sharedInstance] appBridge];
+        _eventDispatcher = eventDispatcher;
         _cellHeight = 44;
         _cells = [NSMutableArray array];
         _autoFocus = YES;
